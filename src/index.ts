@@ -14,7 +14,11 @@ app.start().catch((error) => {
 
 // Example of how to use the on method to handle events
 app.on('message', (msg: IMessageData) => {
-  fluxManager.handle(msg)
+  try {
+    fluxManager.handle(msg)
+  } catch (error) {
+    console.error("Fatal unhandled error: ", error?.message || error);
+  }
 });
 
 app.on('ready', () => {
