@@ -4,7 +4,7 @@ import IState from "./interfaces/state";
 import fs from 'fs';
 import path from 'path';
 import { PersonNumber } from "./types/types";
-import WelcomeState from "../states/welcome";
+import WelcomeState from "../classes/States/welcome";
 
 const allowedNumbers = [
     '5524981017270',

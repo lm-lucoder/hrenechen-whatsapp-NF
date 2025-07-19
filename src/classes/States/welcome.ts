@@ -1,8 +1,8 @@
-import State from "../classes/state";
-import FluxManager from "../whatsapp/fluxManager";
-import IState from "../whatsapp/interfaces/state";
-import { PersonNumber } from "../whatsapp/types/types";
-import AppError from "../whatsapp/errors/AppError";
+import State from "../State";
+import FluxManager from "../../whatsapp/fluxManager";
+import IState from "../../whatsapp/interfaces/state";
+import { PersonNumber } from "../../whatsapp/types/types";
+import AppError from "../../whatsapp/errors/AppError";
 
 class WelcomeState extends State implements IState {
 
