@@ -2,7 +2,6 @@ import FluxManager from "../whatsapp/fluxManager";
 import { IMessageClient } from "../whatsapp/interfaces/message-client";
 import IState from "../whatsapp/interfaces/state";
 import { PersonNumber } from "../whatsapp/types/types";
-import { ProjetoManager } from "../services/projeto-manager";
 
 class State implements IState {
   fluxManager: FluxManager;
