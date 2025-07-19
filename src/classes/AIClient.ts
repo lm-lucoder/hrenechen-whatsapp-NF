@@ -1,6 +1,16 @@
 import { IAIClient, SendMessageParams } from '../interfaces/ai-client';
-
 export default class AIClient implements IAIClient {
+  protected static instance: any;
+
+  protected constructor() { }
+
+  public static getInstance(): AIClient {
+    if (!AIClient.instance) {
+      AIClient.instance = new AIClient();
+    }
+    return AIClient.instance;
+  }
+
   public async getPrompt(promptName: string): Promise<string> {
     const fs = await import('fs/promises');
     const path = await import('path');

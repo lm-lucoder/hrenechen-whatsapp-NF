@@ -7,9 +7,16 @@ class OpenRouterClient extends AIClient {
   private apiUrl = 'https://openrouter.ai/api/v1/chat/completions';
   private apiKey: string;
 
-  constructor(apiKey: string) {
+  private constructor(apiKey: string) {
     super();
     this.apiKey = apiKey;
+  }
+
+  public static getInstance(): OpenRouterClient {
+    if (!OpenRouterClient.instance) {
+      (OpenRouterClient.prototype as any).instance = new OpenRouterClient(process.env.OPENROUTER_API_KEY || '');
+    }
+    return (OpenRouterClient.prototype as any).instance;
   }
 
   public async sendMessage(params: SendMessageParams): Promise<string> {
