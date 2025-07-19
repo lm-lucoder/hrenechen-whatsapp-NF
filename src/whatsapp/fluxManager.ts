@@ -1,4 +1,3 @@
-import { ProjetoManager } from "../services/projeto-manager";
 import { IMessageClient } from "./interfaces/message-client";
 import { IMessageData } from "./interfaces/message-data";
 import IState from "./interfaces/state";
@@ -6,12 +5,6 @@ import fs from 'fs';
 import path from 'path';
 import { PersonNumber } from "./types/types";
 import WelcomeState from "../states/welcome";
-import SelecionarProjetoState from "../states/projeto/selecionar-projeto";
-import ProjetoCriarState from "../states/projeto/projeto-criar";
-import ProjetoGerenciar from "../states/projeto/projeto-gerenciar";
-import ProjetoAtividadeCriarState from "../states/projeto/atividade/projeto-atividade-criar";
-import ProjetoAtividadeAlterarState from "../states/projeto/atividade/projeto-atividade-alterar";
-import ProjetoAtividadeDeletarState from "../states/projeto/atividade/projeto-atividade-deletar";
 
 const allowedNumbers = [
     '5524981017270',
@@ -30,31 +23,19 @@ interface IPeopleContext {
 interface IPersonContext {
     lastMessageDate: number,
     stateName: string,
-    pix?: {
-        to?: string,
-        value: string,
-    },
     vars?: any
 }
 
 class FluxManager {
     private peopleContext: IPeopleContext;
     stateMap: StateMap;
-    projetoManager: ProjetoManager;
     client: IMessageClient;
 
     constructor(client: IMessageClient) {
         this.peopleContext = {};
         this.client = client;
-        this.projetoManager = ProjetoManager.getInstance()
         this.stateMap = {
             "welcome": new WelcomeState(this),
-            "selecionar-projeto": new SelecionarProjetoState(this),
-            "projeto-criar": new ProjetoCriarState(this),
-            "projeto-gerenciar": new ProjetoGerenciar(this),
-            "projeto-atividade-criar": new ProjetoAtividadeCriarState(this),
-            "projeto-atividade-alterar": new ProjetoAtividadeAlterarState(this),
-            "projeto-atividade-deletar": new ProjetoAtividadeDeletarState(this)
         };
     }
 
