@@ -1,0 +1,7 @@
+/node_modules
+/authenticator
+/.wwebjs_cache
+/.wwebjs_auth
+/instantclient_21_13
+/out
+.env
