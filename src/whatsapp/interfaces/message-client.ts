@@ -2,9 +2,16 @@ import { PossibleClients } from "../types/types";
 
 export interface IMessageClient {
   start(): Promise<void>;
-  sendMessage(number: string | number, message: string, configs?: ISendMessageConfigs, otherProps?: any): Promise<any>;
+  sendMessage(props: ISendMessageProps): Promise<any>;
   on(event: string, callback: Function): any;
   getClientType(): PossibleClients;
+}
+
+export interface ISendMessageProps {
+  personNumber: string,
+  message: string,
+  configs?: ISendMessageConfigs,
+  otherProps?: any
 }
 
 export interface ISendMessageConfigs {

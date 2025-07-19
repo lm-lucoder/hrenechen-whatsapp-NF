@@ -1,4 +1,4 @@
-import { IMessageClient } from "./interfaces/message-client";
+import { IMessageClient, ISendMessageProps } from "./interfaces/message-client";
 import { IMessageData } from "./interfaces/message-data";
 import IState from "./interfaces/state";
 import fs from 'fs';
@@ -23,7 +23,14 @@ interface IPeopleContext {
 interface IPersonContext {
     lastMessageDate: number,
     stateName: string,
+    messages?: IMessage[],
     vars?: any
+}
+
+interface IMessage {
+    message: string,
+    date: number,
+    from: "user" | "system"
 }
 
 class FluxManager {
@@ -57,6 +64,7 @@ class FluxManager {
         } //Checa se é o primeiro acesso do usuário. Se sim, o welcomeState é chamado e a função é interrompida
 
         const personContext = this.getPersonContext(cleanPersonNumber);
+        this.storePersonMessage(cleanPersonNumber, body)
         const currentState: IState = this.stateMap[personContext.stateName];
 
         console.log(`Acesso: ${cleanPersonNumber} (${personName}) Estado: ${JSON.stringify(personContext)}`)
@@ -64,10 +72,10 @@ class FluxManager {
             if (currentState) {
                 return currentState.handleOption(body, cleanPersonNumber);
             } else {
-                return this.client.sendMessage(cleanPersonNumber, "Não entendi, por favor, escolha uma das opções disponíveis.");
+                return this.client.sendMessage({ personNumber: cleanPersonNumber, message: "Não entendi, por favor, escolha uma das opções disponíveis." });
             }
         } catch (error) {
-            this.client.sendMessage(cleanPersonNumber, "ERRO: Algo deu errado, por favor avise o time de suporte!");
+            this.client.sendMessage({ personNumber: cleanPersonNumber, message: "ERRO: Algo deu errado, por favor avise o time de suporte!" });
         }
     }
 
@@ -81,6 +89,7 @@ class FluxManager {
         }
         return { firstAccess: false }
     }
+
 
     getPersonContext(personNumber: PersonNumber) {
         return this.peopleContext[personNumber];
@@ -99,6 +108,35 @@ class FluxManager {
     resetPersonState(personNumber: PersonNumber) {
         delete this.peopleContext[personNumber]
         this.configUserState(personNumber)
+    }
+
+    public async sendMessage(props: ISendMessageProps): Promise<any> {
+        this.storePersonMessage(props.personNumber, props.message);
+        return this.client.sendMessage(props);
+    }
+
+    public getChatMessages(personNumber: PersonNumber, top?: number) {
+        if (!this.peopleContext[personNumber]) return [];
+        if (!Array.isArray(this.peopleContext[personNumber].messages)) {
+            this.peopleContext[personNumber].messages = [];
+        }
+        const messages = this.peopleContext[personNumber].messages;
+        return typeof top === "number" ? messages.slice(-top) : messages;
+    }
+
+    private storePersonMessage(personNumber: PersonNumber, message: string) {
+        if (!this.peopleContext[personNumber]) return;
+        if (!this.peopleContext[personNumber].vars) {
+            this.peopleContext[personNumber].vars = {};
+        }
+        if (!Array.isArray(this.peopleContext[personNumber].messages)) {
+            this.peopleContext[personNumber].messages = [];
+        }
+        this.peopleContext[personNumber].messages.push({
+            message,
+            date: Date.now(),
+            from: "user"
+        });
     }
 
     private loadStates(): StateMap {

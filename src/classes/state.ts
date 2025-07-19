@@ -24,12 +24,12 @@ class State implements IState {
       action(personNumber);
     } else {
       const message = 'Opção inválida. Por favor, escolha uma das opções disponíveis.';
-      await this.fluxManager.client.sendMessage(personNumber, message);
+      await this.fluxManager.client.sendMessage({ personNumber, message });
     }
   }
 
   public async cancel(personNumber) {
-    await this.fluxManager.client.sendMessage(personNumber, "Ok, cancelando a sua ação.")
+    await this.fluxManager.client.sendMessage({ personNumber, message: "Ok, cancelando a sua ação." })
     this.fluxManager.setPersonState(personNumber, "welcome").render(personNumber)
   }
 
