@@ -1,5 +1,5 @@
 import dotenv, { config } from "dotenv";
-import { IMessageClient, ISendMessageConfigs } from '../../interfaces/message-client';
+import { IMessageClient, ISendMessageConfigs, ISendMessageProps } from '../../interfaces/message-client';
 import express, { Application } from 'express';
 import fs from 'fs';
 import path from 'path';
@@ -80,7 +80,9 @@ export default class WhatsAppClientOficial implements IMessageClient {
     });
   }
 
-  async sendMessage(number: string | number, message: string, configs?: ISendMessageConfigs, otherProps?: any): Promise<any> {
+  async sendMessage(props: ISendMessageProps): Promise<any> {
+    const { personNumber: number, message, configs } = props;
+
     console.log(`Enviando para: ${number}, mensagem: ${message}`)
     if (configs?.type == 'buttons') {
       return await this._fetchSendButtonsMessage(number.toString(), message, configs)

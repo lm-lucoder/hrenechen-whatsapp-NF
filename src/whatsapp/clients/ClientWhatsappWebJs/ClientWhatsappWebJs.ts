@@ -1,6 +1,6 @@
 import { Client, LocalAuth, MessageMedia } from 'whatsapp-web.js';
 import qrcode from 'qrcode-terminal';
-import { IMessageClient, ISendMessageConfigs } from '../../interfaces/message-client';
+import { IMessageClient, ISendMessageConfigs, ISendMessageProps } from '../../interfaces/message-client';
 import { IMessageData } from '../../interfaces/message-data';
 import { PersonNumber, PossibleClients } from '../../types/types';
 import AppError from '../../errors/AppError';
@@ -63,8 +63,9 @@ export default class ClientWhatsappWebJs implements IMessageClient {
     }
   }
 
-  async sendMessage(number: string | number, message: string, configs?: ISendMessageConfigs, otherProps?: any): Promise<any> {
-    const chatId = this._formatNumber(number);
+  async sendMessage(props: ISendMessageProps): Promise<any> {
+    const chatId = this._formatNumber(props.personNumber);
+    const { message, configs } = props;
     if (configs?.type === 'buttons') {
       return this._sendButtonsMessage(chatId, message, configs);
     }
