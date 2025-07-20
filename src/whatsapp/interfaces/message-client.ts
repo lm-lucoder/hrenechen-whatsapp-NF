@@ -3,8 +3,8 @@ import { PossibleClients } from "../types/types";
 export interface IMessageClient {
   start(): Promise<void>;
   sendMessage(props: ISendMessageProps): Promise<any>;
-  sendMediaMessage(props: ISendMediaMessageProps): Promise<any>;
-  sendDocumentMessage(props: ISendDocumentMessageProps): Promise<any>;
+  sendMediaMessage?(props: ISendMediaMessageProps): Promise<any>;
+  sendDocumentMessage?(props: ISendDocumentMessageProps): Promise<any>;
   on(event: string, callback: Function): any;
   getClientType(): PossibleClients;
 }

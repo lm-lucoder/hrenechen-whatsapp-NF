@@ -2,7 +2,8 @@ import State from "../State";
 import FluxManager from "../../whatsapp/fluxManager";
 import IState, { IHandleMessageProps, IRenderProps } from "../../whatsapp/interfaces/state";
 import OpenRouterClient from "../AIClients/OpenRouterClient";
-
+import fs from 'fs/promises';
+import path from 'path';
 class EmitirNFState extends State implements IState {
 
   constructor(fluxManager: FluxManager) {
@@ -12,7 +13,6 @@ class EmitirNFState extends State implements IState {
   public async render({ personNumber, message }: IRenderProps): Promise<void> {
     this.handleMessage({ message, personNumber });
   }
-
 
   public async handleMessage({ message, personNumber, systemVars }: IHandleMessageProps) {
     const openRouterClient = OpenRouterClient.getInstance();
@@ -113,20 +113,15 @@ class EmitirNFState extends State implements IState {
               }
 
               const buffer = await pdfResponse.arrayBuffer();
-              const fs = await import('fs/promises');
-              const path = await import('path');
-              const tempDir = path.resolve(__dirname, '../../temp');
-              await fs.mkdir(tempDir, { recursive: true });
-              const pdfPath = path.join(tempDir, `${invoiceId}.pdf`);
-              await fs.writeFile(pdfPath, new Uint8Array(buffer));
 
-              // Prossegue a lógica (exemplo: envia mensagem ao usuário)
-              /* await this.fluxManager.sendMessage({
+              await this.fluxManager.client.sendDocumentMessage({
                 personNumber,
-                message: "Nota fiscal emitida com sucesso! O PDF está disponível."
-              }); */
+                documentBuffer: Buffer.from(buffer),
+                fileName: `${invoiceId}.pdf`,
+                mimeType: 'application/pdf',
+                caption: 'Nota fiscal emitida com sucesso!'
+              });
 
-              // Quebra o loop
               break;
             }
 
