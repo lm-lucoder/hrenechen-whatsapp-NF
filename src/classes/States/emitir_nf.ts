@@ -1,7 +1,6 @@
 import State from "../State";
 import FluxManager from "../../whatsapp/fluxManager";
 import IState, { IHandleMessageProps, IRenderProps } from "../../whatsapp/interfaces/state";
-import { PersonNumber } from "../../whatsapp/types/types";
 import OpenRouterClient from "../AIClients/OpenRouterClient";
 
 class EmitirNFState extends State implements IState {
@@ -57,7 +56,7 @@ class EmitirNFState extends State implements IState {
             logradouro: street,
             ibge
           } = await cepResponse.json();
-          const nfeData = this.getNFData({ ...parametros, state, city, street, ibge });
+          const nfeData = this._getNFData({ ...parametros, state, city, street, ibge });
           const response = await fetch(`https://api.nfse.io/v1/companies/${process.env.COMPANY_ID}/serviceinvoices`, {
             method: 'POST',
             headers: {
@@ -69,10 +68,79 @@ class EmitirNFState extends State implements IState {
           if (!response.ok) {
             throw new Error("Erro ao emitir a nota fiscal");
           }
-          const nfData = await response.json();
-          const message = `Nota fiscal emitida. JSONZinho: ${JSON.stringify(nfData)}.`;
-          await this.fluxManager.sendMessage({ personNumber, message });
+          this.fluxManager.sendMessage({ personNumber, message: "Sua nota foi aceita. Aguarde alguns segundos até a emissão." });
+
           this.fluxManager.setPersonState(personNumber, "welcome")
+          //const message = `Nota fiscal emitida. JSONZinho: ${JSON.stringify(nfData)}.`;
+
+          const nfData = await response.json();
+
+          let invoiceId = nfData.id;
+          let flowStatus = nfData.flowStatus;
+          let attempts = 0;
+          let invoiceJson: any = null;
+
+          while (attempts < 100) {
+            // Consulta o status da nota fiscal
+            const statusResponse = await fetch(`https://api.nfse.io/v1/companies/${process.env.COMPANY_ID}/serviceinvoices/${invoiceId}`, {
+              method: 'GET',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `${process.env.NFE_IO_API_KEY}`
+              }
+            });
+
+            if (!statusResponse.ok) {
+              console.error("Erro ao consultar o status da nota fiscal");
+              break;
+            }
+
+            invoiceJson = await statusResponse.json();
+            flowStatus = invoiceJson.flowStatus;
+
+            if (flowStatus === "Issued") {
+              // Download do PDF
+              const pdfResponse = await fetch(`https://api.nfse.io/v1/companies/${process.env.COMPANY_ID}/serviceinvoices/${invoiceId}/pdf?force=true`, {
+                method: 'GET',
+                headers: {
+                  'Authorization': `${process.env.NFE_IO_API_KEY}`
+                }
+              });
+
+              if (!pdfResponse.ok) {
+                console.error("Erro ao baixar o PDF da nota fiscal");
+                break;
+              }
+
+              const buffer = await pdfResponse.arrayBuffer();
+              const fs = await import('fs/promises');
+              const path = await import('path');
+              const tempDir = path.resolve(__dirname, '../../temp');
+              await fs.mkdir(tempDir, { recursive: true });
+              const pdfPath = path.join(tempDir, `${invoiceId}.pdf`);
+              await fs.writeFile(pdfPath, new Uint8Array(buffer));
+
+              // Prossegue a lógica (exemplo: envia mensagem ao usuário)
+              /* await this.fluxManager.sendMessage({
+                personNumber,
+                message: "Nota fiscal emitida com sucesso! O PDF está disponível."
+              }); */
+
+              // Quebra o loop
+              break;
+            }
+
+            // Espera 5 segundos antes da próxima tentativa
+            await new Promise(resolve => setTimeout(resolve, 5000));
+            attempts++;
+          }
+
+          if (attempts === 100 && flowStatus !== "Issued") {
+            await this.fluxManager.sendMessage({
+              personNumber,
+              message: "Não foi possível emitir a nota fiscal após múltiplas tentativas. Tente novamente mais tarde."
+            });
+          }
         } catch (error) {
           console.error("Erro ao emitir a nota fiscal:", error);
           this.fluxManager.setPersonState(personNumber, "welcome");
@@ -92,7 +160,7 @@ class EmitirNFState extends State implements IState {
     }
   }
 
-  private getNFData({ nome_do_cliente, email_do_cliente, info_adicional_nf, info_adicional_endereco, cpf_ou_cnpj, valor_da_nf, numero_endereco, cep, state, city, street, ibge }: any) {
+  private _getNFData({ nome_do_cliente, email_do_cliente, info_adicional_nf, info_adicional_endereco, cpf_ou_cnpj, valor_da_nf, numero_endereco, cep, state, city, street, ibge }: any) {
     const data: any = {
       "Borrower": {
         "FederalTaxNumber": cpf_ou_cnpj,
