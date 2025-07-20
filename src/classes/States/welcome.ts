@@ -1,6 +1,6 @@
 import State from "../State";
 import FluxManager from "../../whatsapp/fluxManager";
-import IState from "../../whatsapp/interfaces/state";
+import IState, { IHandleMessageProps } from "../../whatsapp/interfaces/state";
 import { PersonNumber } from "../../whatsapp/types/types";
 import OpenRouterClient from "../AIClients/OpenRouterClient";
 
@@ -10,13 +10,46 @@ class WelcomeState extends State implements IState {
     super(fluxManager)
   }
 
-  public async handleOption(body: string, personNumber: PersonNumber) {
+
+  public async handleMessage({ message, personNumber }: IHandleMessageProps) {
     const openRouterClient = OpenRouterClient.getInstance();
     const rawPrompt = await openRouterClient.getPrompt('welcome.txt');
+    console.log(`Prompt carregado: ${rawPrompt}`);
     const prompt = rawPrompt
-      .replace("{{USER_MESSAGE}}", body)
-      .replace("{{CHAT_MESSAGES}}", JSON.stringify(this.fluxManager.getChatMessages(personNumber)));
-    const message = await openRouterClient.sendMessage({ messages: [{ role: 'user', content: prompt }] });
+      .replace("{{USER_MESSAGE}}", message)
+      .replace("{{CHAT_MESSAGES}}", JSON.stringify(this.fluxManager.getChatMessages(personNumber, 10)));
+    const openRouterResult = await openRouterClient.sendMessage({ messages: [{ role: 'user', content: prompt }] });
+    const treatedOpenRouterMessage = openRouterResult
+      .replace("```json", "")
+      .replace("```", "")
+      .replace(/\\n/g, "\n")
+      .replace(/\\\"/g, "\"")
+      .replace(/\\'/g, "'");
+    try {
+      const data = JSON.parse(treatedOpenRouterMessage);
+      if (
+        data.intencao == "agendar_servico" &&
+        data.parametros &&
+        data.parametros.data &&
+        data.parametros.horario &&
+        data.parametros.endereco
+      ) {
+        console.log("Agendar serviço:", data.agendar_servico);
+        console.log("Parâmetros:", data.parametros);
+        return this.fluxManager.sendMessage({
+          personNumber,
+          message: `Agendando ... (${data.proxima_mensagem})`,
+        });
+      }
+      this.fluxManager.sendMessage({
+        personNumber,
+        message: data.proxima_mensagem || "Obrigado por entrar em contato! Como posso ajudar?",
+      });
+    } catch (error) {
+      console.error("Erro ao processar a mensagem da IA:", error);
+      //await this.fluxManager.client.sendMessage({ personNumber, message: "Algo deu errado, a IA não conseguiu processar sua solicitação." });
+    }
+    //await this.fluxManager.client.sendMessage({ personNumber, message: treatedOpenRouterMessage });
   }
 }
 

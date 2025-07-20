@@ -14,7 +14,8 @@ export default class AIClient implements IAIClient {
   public async getPrompt(promptName: string): Promise<string> {
     const fs = await import('fs/promises');
     const path = await import('path');
-    const promptsDir = path.resolve(__dirname, '../prompts');
+    const promptsDir = path.resolve(__dirname, '../../prompts');
+    console.log(`Carregando prompt: ${promptName} de ${promptsDir}`);
     const filePath = path.join(promptsDir, promptName);
     try {
       const content = await fs.readFile(filePath, 'utf-8');

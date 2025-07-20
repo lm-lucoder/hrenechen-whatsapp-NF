@@ -18,7 +18,7 @@ Formato da resposta (JSON):
     "descricao_problema": "..."
   },
   "faltando": ["..."],
-  "perguntar": "..."
+  "proxima_mensagem": "..."
 }
 
 Mensagens até o momento: {{CHAT_MESSAGES}}

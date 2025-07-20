@@ -2,7 +2,7 @@ import ClientWhatsappWebJs from "./whatsapp/clients/ClientWhatsappWebJs/ClientWh
 import WhatsAppClientOficial from "./whatsapp/clients/WhatsAppClientOficial/WhatsAppClientOficial";
 import FluxManager from "./whatsapp/fluxManager";
 import { IMessageData } from "./whatsapp/interfaces/message-data";
-
+import 'dotenv/config';
 
 const app = new ClientWhatsappWebJs();
 const fluxManager = new FluxManager(app)

@@ -1,6 +1,6 @@
 import FluxManager from "../whatsapp/fluxManager";
 import { IMessageClient } from "../whatsapp/interfaces/message-client";
-import IState from "../whatsapp/interfaces/state";
+import IState, { IHandleMessageProps, IRenderProps } from "../whatsapp/interfaces/state";
 import { PersonNumber } from "../whatsapp/types/types";
 
 class State implements IState {
@@ -13,13 +13,13 @@ class State implements IState {
     this.client = this.fluxManager.client;
   }
 
-  public async render(personNumber: PersonNumber): Promise<void> { console.error("Aviso: Tentativa de renderizar um estado sem método render especificado") }
+  public async render({ message, personNumber }: IRenderProps): Promise<void> { console.error("Aviso: Tentativa de renderizar um estado sem método render especificado") }
 
-  public async handleOption(body: string, personNumber: PersonNumber) {
-    if (body.toLowerCase().replace(" ", "") == 'cancelar') {
+  public async handleMessage({ message, personNumber }: IHandleMessageProps) {
+    if (message.toLowerCase().replace(" ", "") == 'cancelar') {
       return await this.cancel(personNumber)
     }
-    const action = this.getAction(body);
+    const action = this.getAction(message);
     if (action) {
       action(personNumber);
     } else {

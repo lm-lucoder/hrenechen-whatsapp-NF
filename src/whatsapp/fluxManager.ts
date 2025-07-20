@@ -59,9 +59,9 @@ class FluxManager {
         let cleanPersonNumber = personNumber.toString().replace(/[^0-9]/g, "");
         if (!this.checkPermission({ personNumber: cleanPersonNumber, personName })) return;
         const { firstAccess } = this.configUserState(cleanPersonNumber);
-        if (firstAccess) {
-            return this.getPersonState(cleanPersonNumber).render(cleanPersonNumber)
-        } //Checa se é o primeiro acesso do usuário. Se sim, o welcomeState é chamado e a função é interrompida
+        /* if (firstAccess) {
+            return this.getPersonState(cleanPersonNumber)
+        } */
 
         const personContext = this.getPersonContext(cleanPersonNumber);
         this.storePersonMessage(cleanPersonNumber, body)
@@ -70,7 +70,7 @@ class FluxManager {
         console.log(`Acesso: ${cleanPersonNumber} (${personName}) Estado: ${JSON.stringify(personContext)}`)
         try {
             if (currentState) {
-                return currentState.handleOption(body, cleanPersonNumber);
+                return currentState.handleMessage({ message: body, personNumber: cleanPersonNumber });
             } else {
                 return this.client.sendMessage({ personNumber: cleanPersonNumber, message: "Não entendi, por favor, escolha uma das opções disponíveis." });
             }
@@ -110,12 +110,12 @@ class FluxManager {
         this.configUserState(personNumber)
     }
 
-    public async sendMessage(props: ISendMessageProps): Promise<any> {
+    async sendMessage(props: ISendMessageProps): Promise<any> {
         this.storePersonMessage(props.personNumber, props.message);
         return this.client.sendMessage(props);
     }
 
-    public getChatMessages(personNumber: PersonNumber, top?: number) {
+    getChatMessages(personNumber: PersonNumber, top?: number) {
         if (!this.peopleContext[personNumber]) return [];
         if (!Array.isArray(this.peopleContext[personNumber].messages)) {
             this.peopleContext[personNumber].messages = [];
