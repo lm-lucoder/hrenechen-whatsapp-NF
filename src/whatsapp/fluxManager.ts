@@ -5,6 +5,7 @@ import fs from 'fs';
 import path from 'path';
 import { PersonNumber } from "./types/types";
 import WelcomeState from "../classes/States/welcome";
+import EmitirNFState from "../classes/States/emitir_nf";
 
 const allowedNumbers = [
     '5524981017270',
@@ -43,6 +44,7 @@ class FluxManager {
         this.client = client;
         this.stateMap = {
             "welcome": new WelcomeState(this),
+            "emitir_nf": new EmitirNFState(this)
         };
     }
 

@@ -12,6 +12,7 @@ interface IState {
 export interface IHandleMessageProps {
   message: string;
   personNumber: PersonNumber;
+  systemVars?: any
 }
 export interface IRenderProps {
   message: string;
