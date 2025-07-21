@@ -47,6 +47,7 @@ class EmitirNFState extends State implements IState {
         numero_endereco &&
         cep
       ) {
+        let nfeRequestData: any = null;
         try {
           const cepResponse = await fetch(`https://viacep.com.br/ws/${cleanNumbersString(cep)}/json/`);
           if (!cepResponse.ok) {
@@ -61,14 +62,14 @@ class EmitirNFState extends State implements IState {
           if (!validateCpfCnpj(cpf_ou_cnpj)) {
             throw new Error("CPF ou CNPJ inválido");
           }
-          const nfeData = this._getNFData({ ...parametros, state, city, street, ibge, cpf_ou_cnpj: cleanNumbersString(cpf_ou_cnpj) });
+          nfeRequestData = this._getNFData({ ...parametros, state, city, street, ibge, cpf_ou_cnpj: cleanNumbersString(cpf_ou_cnpj) });
           const response = await fetch(`https://api.nfse.io/v1/companies/${process.env.COMPANY_ID}/serviceinvoices`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
               'Authorization': `${process.env.NFE_IO_API_KEY}`
             },
-            body: JSON.stringify(nfeData)
+            body: JSON.stringify(nfeRequestData)
           });
           if (!response.ok) {
             throw new Error("Erro ao emitir a nota fiscal");
@@ -97,7 +98,7 @@ class EmitirNFState extends State implements IState {
 
             if (!statusResponse.ok) {
               console.error("Erro ao consultar o status da nota fiscal");
-              break;
+              throw new Error("Erro ao consultar o status da nota fiscal");
             }
 
             invoiceJson = await statusResponse.json();
@@ -143,6 +144,7 @@ class EmitirNFState extends State implements IState {
           }
         } catch (error) {
           console.error("Erro ao emitir a nota fiscal:", error);
+          this.fluxManager.sendMessage({ personNumber, message: "Tive um erro ao emitir a nota fiscal. Por favor, verifique se os dados estão corretos." });
           this.fluxManager.setPersonState(personNumber, "welcome");
           //await this.fluxManager.client.sendMessage({ personNumber, message: "Algo deu errado ao emitir a nota fiscal. Por favor, tente novamente mais tarde." });
         }
@@ -163,10 +165,10 @@ class EmitirNFState extends State implements IState {
   private _getNFData({ nome_do_cliente, email_do_cliente, info_adicional_nf, info_adicional_endereco, cpf_ou_cnpj, valor_da_nf, numero_endereco, cep, state, city, street, ibge }: any) {
     const data: any = {
       "Borrower": {
-        "FederalTaxNumber": cpf_ou_cnpj,
+        "FederalTaxNumber": cleanNumbersString(cpf_ou_cnpj),
         "Address": {
           "country": "BRA",
-          "postalCode": cep,
+          "postalCode": cleanNumbersString(cep),
           "street": street,
           "number": numero_endereco,
           "additionalInformation": info_adicional_endereco,
@@ -179,7 +181,7 @@ class EmitirNFState extends State implements IState {
       },
       "CityServiceCode": "8219999",
       "Description": "Preparação de documentos e serviços",
-      "ServicesAmount": valor_da_nf.replace(",", "."),
+      "ServicesAmount": valor_da_nf.replaceAll(",", "."),
     }
     if (nome_do_cliente) {
       data.Borrower.Name = nome_do_cliente;
