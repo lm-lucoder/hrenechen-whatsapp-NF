@@ -4,6 +4,8 @@ import IState, { IHandleMessageProps, IRenderProps } from "../../whatsapp/interf
 import OpenRouterClient from "../AIClients/OpenRouterClient";
 import fs from 'fs/promises';
 import path from 'path';
+import { validateCpfCnpj } from "../../utils/validateCpfCnpj";
+import cleanNumbersString from "../../utils/cleanNumbersString";
 class EmitirNFState extends State implements IState {
 
   constructor(fluxManager: FluxManager) {
@@ -46,7 +48,7 @@ class EmitirNFState extends State implements IState {
         cep
       ) {
         try {
-          const cepResponse = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+          const cepResponse = await fetch(`https://viacep.com.br/ws/${cleanNumbersString(cep)}/json/`);
           if (!cepResponse.ok) {
             throw new Error("Erro ao consultar o CEP");
           }
@@ -56,7 +58,10 @@ class EmitirNFState extends State implements IState {
             logradouro: street,
             ibge
           } = await cepResponse.json();
-          const nfeData = this._getNFData({ ...parametros, state, city, street, ibge });
+          if (!validateCpfCnpj(cpf_ou_cnpj)) {
+            throw new Error("CPF ou CNPJ inválido");
+          }
+          const nfeData = this._getNFData({ ...parametros, state, city, street, ibge, cpf_ou_cnpj: cleanNumbersString(cpf_ou_cnpj) });
           const response = await fetch(`https://api.nfse.io/v1/companies/${process.env.COMPANY_ID}/serviceinvoices`, {
             method: 'POST',
             headers: {
