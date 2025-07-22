@@ -20,7 +20,7 @@ class OpenRouterClient extends AIClient {
   }
 
   public async sendMessage(params: SendMessageParams): Promise<string> {
-    const model = params.model || 'deepseek/deepseek-chat:free';
+    const model = params.model || 'deepseek/deepseek-r1:free';
     const payload: OpenRouterRequest = { model, messages: params.messages };
     const fetch = (await import('node-fetch')).default;
     try {
