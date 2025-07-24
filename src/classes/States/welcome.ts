@@ -26,7 +26,8 @@ class WelcomeState extends State implements IState {
       .replace("```", "")
       .replace(/\\n/g, "\n")
       .replace(/\\\"/g, "\"")
-      .replace(/\\'/g, "'");
+      .replace(/\\'/g, "'")
+      .replaceAll("\n", "");
     try {
       const data = JSON.parse(treatedOpenRouterMessage);
       if (data.intencao == "emitir_nota_fiscal") {

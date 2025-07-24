@@ -62,7 +62,9 @@ class EmitirNFState extends State implements IState {
       .replace("```", "")
       .replace(/\\n/g, "\n")
       .replace(/\\"/g, '"')
-      .replace(/\\'/g, "'");
+      .replace(/\\'/g, "'")
+      .replaceAll("\n", "")
+      ;
     return JSON.parse(treatedOpenRouterMessage);
   }
 
